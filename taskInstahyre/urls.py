@@ -16,17 +16,13 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from django.urls import include
 from django.conf import settings # debug_toolbar
 from django.conf.urls.static import static # debug_toolbar
-from users.views import UserProfileCreateView, ContactListView, SearchView, SpamReportCreateView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/register/', UserProfileCreateView.as_view(), name='register'),
-    path('api/contacts/', ContactListView.as_view(), name='contacts'),
-    path('api/search/', SearchView.as_view(), name='search'),
-    path('api/report-spam/', SpamReportCreateView.as_view(), name='report_spam'),
+    path('api/', include('users.urls')),
+    path('api/', include('spam.urls')),
     path("__debug__/", include('debug_toolbar.urls')), # debug_toolbar
 ]
 
