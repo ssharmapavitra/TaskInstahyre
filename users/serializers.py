@@ -7,20 +7,35 @@ from .models import UserProfile, Contact, SpamReport
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('id', 'username', 'password')
+        fields = ('id','username', 'password')
         extra_kwargs = {'password': {'write_only': True}}
 
 class UserProfileSerializer(serializers.ModelSerializer):
-    user = UserSerializer(write_only=True)  # Use the UserSerializer for the nested "user" field
-
+    
     class Meta:
         model = UserProfile
-        fields = ('id', 'user', 'phone_number', 'email_address')
+        fields = ('user','name','phone_number', 'email_address')
 
+class CreateUserSerializer(serializers.Serializer):
+    name = serializers.CharField()
+    phone_number = serializers.CharField()
+    password = serializers.CharField(write_only=True)
+    email_address = serializers.EmailField(required=False)
+    
     def create(self, validated_data):
-        user_data = validated_data.pop('user')
-        user = User.objects.create_user(**user_data)
-        user_profile = UserProfile.objects.create(user=user, **validated_data)
+        name = validated_data.get('name')
+        phone_number = validated_data.get('phone_number')
+        password = validated_data.get('password')
+        email_address = validated_data.get('email_address')
+
+        existing_user = User.objects.filter(userprofile__phone_number=phone_number).first()
+
+        if existing_user:
+            raise serializers.ValidationError('User with this phone number already exists.')
+        
+        user = User.objects.create_user(username=name, password=password)
+
+        user_profile = UserProfile.objects.create(user=user, name=name, phone_number=phone_number, email_address=email_address)
         return user_profile
     
 class ContactSerializer(serializers.ModelSerializer):
